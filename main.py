@@ -31,7 +31,34 @@ def save_settings():
 
 
 def restore():
-    return  # todo
+    global packagelist, config
+    try:
+        os.chdir(backupdir)
+    except FileNotFoundError:
+        print("Backup directory not found! Does it really exist? Please check for correct order of arguments: "
+              "-d/--backup-dir -r/--restore!")
+        exit(2)
+    try:
+        packagelist = open("packages.txt", "r")
+    except FileNotFoundError:
+        print("No packages.txt in your backup directory! Did you specify the right directory? Please check for "
+              "correct order of arguments: first -d/--backup-dir then -r/--restore!")
+        packagelist.close()
+        exit(2)
+    else:
+        subprocess.call(["dpkg", "--set-selections"], stdin=packagelist)
+        subprocess.call(["apt-get", "dselect-upgrade"])
+        packagelist.close()
+    try:
+        config = open("dconf_out.txt", "r")
+    except FileNotFoundError:
+        print("No dconf_out.txt in your backup directory! Did you specify the right directory? Please check for "
+              "correct order of arguments: first -d/--backup-dir then -r/--restore!")
+        config.close()
+    else:
+        subprocess.call(['dconf', 'load'], stdin=config)
+        config.close()
+    exit()
 
 
 if __name__ == '__main__':
@@ -64,3 +91,4 @@ if __name__ == '__main__':
     run_daily()
     list_pkgs()
     save_settings()
+
