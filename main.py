@@ -1,8 +1,8 @@
+import datetime
+import getopt
 import os
 import subprocess
-import datetime
 import sys
-import getopt
 
 
 def run_daily():
@@ -47,9 +47,10 @@ def restore():
             packagelist.close()
             exit(2)
         else:
-            subprocess.call(["dpkg", "--set-selections"], stdin=packagelist)
-            subprocess.call(["apt-get", "dselect-upgrade"])
+            subprocess.run(["dpkg", "--set-selections"], stdin=packagelist)
+            subprocess.run(["apt-get", "dselect-upgrade"])
             packagelist.close()
+            print("Restoration of packages complete")
     else:
         print("You're not root! You can't restore packages unless you are root!")
     try:
@@ -59,8 +60,10 @@ def restore():
               "correct order of arguments: first -d/--backup-dir then -r/--restore!")
         config.close()
     else:
-        subprocess.call(['dconf', 'load'], stdin=config)
+        subprocess.run(['dconf', 'load'], stdin=config)
         config.close()
+        print("Restoration of settings is complete")
+    print("Exitting...")
     exit()
 
 
