@@ -76,11 +76,11 @@ if __name__ == '__main__':
         exit(1)
     for option, value in options:
         if option in ("-h", "help"):
-            print("usage: <name> [opts]\n\
+            print("usage: barusu [opts]\n\
                 Options:\n\
                 \t-h --help: show this\n\
                 \t-d --backup-dir [directory]: set the directory for the backup/restoration (default is ~/.backups)\n\
-                \t-r --restore: run the restoration (from backupdir)\n")  # todo: <name>
+                \t-r --restore: run the restoration (from backupdir)\n")
             exit()
         elif option in ("-d", "backup-dir"):
             backupdir = os.path.expanduser(value)
