@@ -76,15 +76,15 @@ def restore():
 
 
 def check_progs():
-    apt = distutils.spawn.find_executable("apt-get")
-    dconf = distutils.spawn.find_executable("dconf")
-    if apt == False:
+    apt_present = distutils.spawn.find_executable("apt-get")
+    dconf_present = distutils.spawn.find_executable("dconf")
+    if apt_present is False:
         print("Your system is not using apt as a package manager! Barusu uses apt to back up your packages. Barusu IS "
               "NOT designed to work with other packaging tools.")
-    if dconf = False:
+    if dconf_present is False:
         print("Your system is not using dconf! Barusu uses dconf to back up your settings. Barusu IS "
               "NOT designed to work with other settings manager.")
-    return apt, dconf
+    return apt_present, dconf_present
 
 
 if __name__ == '__main__':
@@ -94,19 +94,20 @@ if __name__ == '__main__':
     except getopt.GetoptError as err:
         print("Error: ", err.msg)
         exit(1)
-    for option, value in options:
-        if option in ("-h", "help"):
-            print("usage: backup_assistant [opts]\n\
-                Options:\n\
-                \t-h --help: show this\n\
-                \t-d --backup-dir [directory]: set the directory for the backup/restoration (default is ~/.backups)\n\
-                \t-r --restore: run the restoration (from backupdir)\n")
-            exit()
-        elif option in ("-d", "backup-dir"):
-            backupdir = os.path.expanduser(value)
-        elif option in ("-r", "restore"):
-            restore()
-            exit()
+    else:
+        for option, value in options:
+            if option in ("-h", "help"):
+                print("usage: backup_assistant [opts]\n\
+                    Options:\n\
+                    \t-h --help: show this\n\
+                    \t-d --backup-dir [directory]: set the directory for the backup/restoration (default is ~/.backups)\n\
+                    \t-r --restore: run the restoration (from backupdir)\n")
+                exit()
+            elif option in ("-d", "backup-dir"):
+                backupdir = os.path.expanduser(value)
+            elif option in ("-r", "restore"):
+                restore()
+                exit()
 
     apt, dconf = check_progs()
     if apt and dconf:
@@ -122,4 +123,3 @@ if __name__ == '__main__':
     run_daily()
     list_pkgs()
     save_settings()
-
