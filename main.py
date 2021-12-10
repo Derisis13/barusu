@@ -1,4 +1,5 @@
 import datetime
+import distutils.spawn
 import getopt
 import os
 import subprocess
@@ -47,6 +48,13 @@ def restore():
             packagelist.close()
             exit(2)
         else:
+            try:
+                f = open(".backupdone", "r")
+                date = f.read(10)
+                f.close()
+            except FileNotFoundError:
+                date = "Unknown"
+            print("Restoring programs and settings from ", date)
             subprocess.run(["dpkg", "--set-selections"], stdin=packagelist)
             subprocess.run(["apt-get", "dselect-upgrade"])
             packagelist.close()
@@ -67,6 +75,18 @@ def restore():
     exit()
 
 
+def check_progs():
+    apt = distutils.spawn.find_executable("apt-get")
+    dconf = distutils.spawn.find_executable("dconf")
+    if apt == False:
+        print("Your system is not using apt as a package manager! Barusu uses apt to back up your packages. Barusu IS "
+              "NOT designed to work with other packaging tools.")
+    if dconf = False:
+        print("Your system is not using dconf! Barusu uses dconf to back up your settings. Barusu IS "
+              "NOT designed to work with other settings manager.")
+    return apt, dconf
+
+
 if __name__ == '__main__':
     backupdir = os.path.expanduser("~/.backup")
     try:
@@ -76,7 +96,7 @@ if __name__ == '__main__':
         exit(1)
     for option, value in options:
         if option in ("-h", "help"):
-            print("usage: barusu [opts]\n\
+            print("usage: backup_assistant [opts]\n\
                 Options:\n\
                 \t-h --help: show this\n\
                 \t-d --backup-dir [directory]: set the directory for the backup/restoration (default is ~/.backups)\n\
@@ -87,6 +107,11 @@ if __name__ == '__main__':
         elif option in ("-r", "restore"):
             restore()
             exit()
+
+    apt, dconf = check_progs()
+    if apt and dconf:
+        print("System incompatibilities, exitting...")
+        exit(3)
 
     try:
         os.chdir(backupdir)
