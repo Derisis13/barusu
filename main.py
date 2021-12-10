@@ -108,7 +108,7 @@ if __name__ == '__main__':
     else:
         for option, value in options:
             if option in ("-h", "--help"):
-                print("usage: backup_assistant [opts]\n"
+                print("usage: barusu [opts]\n"
                     "Options:\n"
                     "\t-h --help: show this\n"
                     "\t-d --backup-dir [directory]: set the directory for the backup/restoration (default is ~/.backups)\n"
