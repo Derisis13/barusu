@@ -47,19 +47,18 @@ def save_settings():
 
 def restore():
     global packagelist, config
+    try:
+        os.chdir(backupdir)
+    except FileNotFoundError:
+        print("Backup directory not found! Does it really exist? Please check for correct order of arguments: "
+              "-d/--backup-dir -r/--restore!")
+        exit(2)
     if os.getuid() == 0:
-        try:
-            os.chdir(backupdir)
-        except FileNotFoundError:
-            print("Backup directory not found! Does it really exist? Please check for correct order of arguments: "
-                  "-d/--backup-dir -r/--restore!")
-            exit(2)
         try:
             packagelist = open("packages.txt", "r")
         except FileNotFoundError:
             print("No packages.txt in your backup directory! Did you specify the right directory? Please check for "
                   "correct order of arguments: first -d/--backup-dir then -r/--restore!")
-            packagelist.close()
             exit(2)
         else:
             try:
@@ -71,7 +70,6 @@ def restore():
             print("Restoring programs and settings from ", date)
             subprocess.run(["dpkg", "--set-selections"], stdin=packagelist)
             subprocess.run(["apt-get", "dselect-upgrade"])
-            packagelist.close()
             print("Restoration of packages complete")
     else:
         print("You're not root! You can't restore packages unless you are root!")
@@ -80,9 +78,8 @@ def restore():
     except FileNotFoundError:
         print("No dconf_out.txt in your backup directory! Did you specify the right directory? Please check for "
               "correct order of arguments: first -d/--backup-dir then -r/--restore!")
-        config.close()
     else:
-        subprocess.run(['dconf', 'load'], stdin=config)
+        subprocess.run(['dconf', 'load', '/'], stdin=config)
         config.close()
         print("Restoration of settings is complete")
     print("Exitting...")
@@ -110,21 +107,21 @@ if __name__ == '__main__':
         exit(1)
     else:
         for option, value in options:
-            if option in ("-h", "help"):
-                print("usage: backup_assistant [opts]\n\
-                    Options:\n\
-                    \t-h --help: show this\n\
-                    \t-d --backup-dir [directory]: set the directory for the backup/restoration (default is ~/.backups)\n\
-                    \t-r --restore: run the restoration (from backupdir)\n")
+            if option in ("-h", "--help"):
+                print("usage: backup_assistant [opts]\n"
+                    "Options:\n"
+                    "\t-h --help: show this\n"
+                    "\t-d --backup-dir [directory]: set the directory for the backup/restoration (default is ~/.backups)\n"
+                    "\t-r --restore: run the restoration (from backupdir)\n")
                 exit()
-            elif option in ("-d", "backup-dir"):
+            elif option in ("-d", "--backup-dir"):
                 backupdir = os.path.expanduser(value)
-            elif option in ("-r", "restore"):
+            elif option in ("-r", "--restore"):
                 restore()
                 exit()
 
     apt, dconf = check_progs()
-    if apt and dconf:
+    if (apt and dconf) is False:
         print("System incompatibilities, exitting...")
         exit(3)
 
