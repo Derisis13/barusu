@@ -166,7 +166,7 @@ if __name__ == '__main__':
             elif option in ("-r", "--restore"):
                 restore_mode = True
 
-    actions = [package_manager, settings_editor]
+    actions = [package_manager, settings_editor, flatpak]
     for i in actions:
         if check_progs(i) is False:
             actions.pop(actions.index(i))
