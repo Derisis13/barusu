@@ -53,55 +53,58 @@ def restore():
         print("Backup directory not found! Does it really exist? Please check for correct order of arguments: "
               "-d/--backup-dir -r/--restore!")
         exit(2)
-    if os.getuid() == 0:
-        try:
-            packagelist = open("packages.txt", "r")
-        except FileNotFoundError:
-            print("No packages.txt in your backup directory! Did you specify the right directory? Please check for "
-                  "correct order of arguments: first -d/--backup-dir then -r/--restore!")
-            exit(2)
-        else:
+
+    if actions.__contains__("apt-get"):
+        if os.getuid() == 0:
             try:
-                f = open(".backupdone", "r")
-                date = f.read(10)
-                f.close()
+                packagelist = open("packages.txt", "r")
             except FileNotFoundError:
-                date = "Unknown"
-            print("Restoring programs and settings from ", date)
-            subprocess.run(["dpkg", "--set-selections"], stdin=packagelist)
-            subprocess.run(["apt-get", "dselect-upgrade"])
-            print("Restoration of packages complete")
-    else:
-        print("You're not root! You can't restore packages unless you are root!")
-    try:
-        config = open("dconf_out.txt", "r")
-    except FileNotFoundError:
-        print("No dconf_out.txt in your backup directory! Did you specify the right directory? Please check for "
-              "correct order of arguments: first -d/--backup-dir then -r/--restore!")
-    else:
-        subprocess.run(['dconf', 'load', '/'], stdin=config)
-        config.close()
-        print("Restoration of settings is complete")
+                print("No packages.txt in your backup directory! Did you specify the right directory? Please check for "
+                      "correct order of arguments: first -d/--backup-dir then -r/--restore!")
+                exit(2)
+            else:
+                try:
+                    f = open(".backupdone", "r")
+                    date = f.read(10)
+                    f.close()
+                except FileNotFoundError:
+                    date = "Unknown"
+                print("Restoring programs and settings from ", date)
+                subprocess.run(["dpkg", "--set-selections"], stdin=packagelist)
+                subprocess.run(["apt-get", "dselect-upgrade"])
+                print("Restoration of packages complete")
+        else:
+            print("You're not root! You can't restore packages unless you are root!")
+    if actions.__contains__("dconf"):
+        try:
+            config = open("dconf_out.txt", "r")
+        except FileNotFoundError:
+            print("No dconf_out.txt in your backup directory! Did you specify the right directory? Please check for "
+                  "correct order of arguments: first -d/--backup-dir then -r/--restore!")
+        else:
+            subprocess.run(['dconf', 'load', '/'], stdin=config)
+            config.close()
+            print("Restoration of settings is complete")
     print("Exitting...")
     exit()
 
 
-def check_progs():
-    apt_present = distutils.spawn.find_executable("apt-get")
-    dconf_present = distutils.spawn.find_executable("dconf")
-    if apt_present is False:
-        print("Your system is not using apt as a package manager! Barusu uses apt to back up your packages. Barusu IS "
-              "NOT designed to work with other packaging tools.")
-    if dconf_present is False:
-        print("Your system is not using dconf! Barusu uses dconf to back up your settings. Barusu IS "
-              "NOT designed to work with other settings manager.")
-    return apt_present, dconf_present
+def check_progs(prog):
+    if prog is False:
+        return False
+    if distutils.spawn.find_executable(prog) is False:
+        print("Missing program:" + prog + "! It is removed from the list of actions to perform...")
+        return False
+    return True
 
 
 if __name__ == '__main__':
     backupdir = os.path.expanduser("~/.backup")
+    package_manager = "apt-get"
+    settings_editor = "dconf"
+    restore_mode = False
     try:
-        options, values = getopt.getopt(sys.argv[1:], "hd:r", ["help", "backup-dir=", "restore"])
+        options, values = getopt.getopt(sys.argv[1:], "hd:ra:", ["help", "backup-dir=", "restore", "action="])
     except getopt.GetoptError as err:
         print("Error: ", err.msg)
         exit(1)
@@ -111,26 +114,39 @@ if __name__ == '__main__':
                 print("usage: barusu [opts]\n"
                       "Options:\n"
                       "\t-h --help: show this\n"
-                      "\t-d --backup-dir [directory]: set the directory for the backup/restoration (default is ~/.backups)\n"
-                      "\t-r --restore: run the restoration (from backupdir)\n")
+                      "\t-d --backup-dir [directory]: set the directory for the backup/restoration "
+                      "(default is ~/.backups)\n"
+                      "\t-r --restore: run the restoration (from backupdir)\n"
+                      "\t-a --action [a/d]: select actions to perform (default is all). Valid actions: "
+                      "a - back up apt packages, d - back up dconf settings")
                 exit()
             elif option in ("-d", "--backup-dir"):
                 backupdir = os.path.expanduser(value)
+            elif option in ("-a", "--action"):
+                package_manager = False
+                settings_editor = False
+                if value.__contains__('a'):
+                    package_manager = "apt-get"
+                if value.__contains__('d'):
+                    settings_editor = "dconf"
             elif option in ("-r", "--restore"):
-                restore()
-                exit()
+                restore_mode = True
 
-    apt, dconf = check_progs()
-    if (apt and dconf) is False:
-        print("System incompatibilities, exitting...")
-        exit(3)
+    actions = [package_manager, settings_editor]
+    for i in actions:
+        if check_progs(i) is False:
+            actions.pop(actions.index(i))
 
     try:
         os.chdir(backupdir)
     except FileNotFoundError:
         subprocess.call(["mkdir", backupdir])
         os.chdir(backupdir)
-
+    if restore_mode:
+        restore()
+        exit(0)
     run_daily()
-    list_pkgs()
-    save_settings()
+    if actions.__contains__("apt-get"):
+        list_pkgs()
+    if actions.__contains__("dconf"):
+        save_settings()
