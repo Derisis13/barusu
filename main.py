@@ -18,6 +18,7 @@ import getopt
 import os
 import subprocess
 import sys
+from typing import TextIO
 
 
 def run_daily():
@@ -33,58 +34,64 @@ def run_daily():
     f.close()
 
 
-def list_pkgs():
+def list_apt_packages():
     f = open("packages.txt", "w")
     subprocess.run(args=["dpkg", "--get-selections"], stdout=f)
     f.close()
 
 
-def save_settings():
+def save_dconf_settings():
     f = open("dconf_out.txt", "w")
     subprocess.run(args=["dconf", "dump", "/"], stdout=f)
     f.close()
 
 
+def restore_apt_packages():
+    if os.getuid() == 0:
+        try:
+            packagelist = open("packages.txt", "r")
+        except FileNotFoundError:
+            print("No packages.txt in your backup directory! Did you specify the right directory? Please check for "
+                  "correct order of arguments: first -d/--backup-dir then -r/--restore!")
+            exit(2)
+        else:
+            try:
+                f = open(".backupdone", "r")
+                date = f.read(10)
+                f.close()
+            except FileNotFoundError:
+                date = "Unknown"
+            print("Restoring programs and settings from ", date)
+            subprocess.run(["dpkg", "--set-selections"], stdin=packagelist)
+            subprocess.run(["apt-get", "dselect-upgrade"])
+            print("Restoration of packages complete")
+    else:
+        print("You're not root! You can't restore apt packages unless you are root!")
+
+
+def restore_dconf_settings():
+    try:
+        config = open("dconf_out.txt", "r")
+    except FileNotFoundError:
+        print("No dconf_out.txt in your backup directory! Did you specify the right directory? Please check for "
+              "correct order of arguments: first -d/--backup-dir then -r/--restore!")
+    else:
+        subprocess.run(['dconf', 'load', '/'], stdin=config)
+        config.close()
+        print("Restoration of settings is complete")
+
+
 def restore():
-    global packagelist, config
     try:
         os.chdir(backupdir)
     except FileNotFoundError:
         print("Backup directory not found! Does it really exist? Please check for correct order of arguments: "
               "-d/--backup-dir -r/--restore!")
         exit(2)
-
     if actions.__contains__("apt-get"):
-        if os.getuid() == 0:
-            try:
-                packagelist = open("packages.txt", "r")
-            except FileNotFoundError:
-                print("No packages.txt in your backup directory! Did you specify the right directory? Please check for "
-                      "correct order of arguments: first -d/--backup-dir then -r/--restore!")
-                exit(2)
-            else:
-                try:
-                    f = open(".backupdone", "r")
-                    date = f.read(10)
-                    f.close()
-                except FileNotFoundError:
-                    date = "Unknown"
-                print("Restoring programs and settings from ", date)
-                subprocess.run(["dpkg", "--set-selections"], stdin=packagelist)
-                subprocess.run(["apt-get", "dselect-upgrade"])
-                print("Restoration of packages complete")
-        else:
-            print("You're not root! You can't restore packages unless you are root!")
+        restore_apt_packages()
     if actions.__contains__("dconf"):
-        try:
-            config = open("dconf_out.txt", "r")
-        except FileNotFoundError:
-            print("No dconf_out.txt in your backup directory! Did you specify the right directory? Please check for "
-                  "correct order of arguments: first -d/--backup-dir then -r/--restore!")
-        else:
-            subprocess.run(['dconf', 'load', '/'], stdin=config)
-            config.close()
-            print("Restoration of settings is complete")
+        restore_dconf_settings()
     print("Exitting...")
     exit()
 
@@ -147,6 +154,6 @@ if __name__ == '__main__':
         exit(0)
     run_daily()
     if actions.__contains__("apt-get"):
-        list_pkgs()
+        list_apt_packages()
     if actions.__contains__("dconf"):
-        save_settings()
+        save_dconf_settings()
