@@ -40,6 +40,12 @@ def list_apt_packages():
     f.close()
 
 
+def list_flatpak_apps():
+    f = open("flatpaks.txt", "w")
+    subprocess.run(args=["flatpak", "list", "--app", "--columns=origin,ref"], stdout=f)  # This will store a junk line
+    f.close()
+
+
 def save_dconf_settings():
     f = open("dconf_out.txt", "w")
     subprocess.run(args=["dconf", "dump", "/"], stdout=f)
@@ -67,6 +73,28 @@ def restore_apt_packages():
             print("Restoration of packages complete")
     else:
         print("You're not root! You can't restore apt packages unless you are root!")
+
+
+def restore_flatpak_apps():
+    try:
+        f = open("flatpaks.txt", "r")
+    except FileNotFoundError:
+        print("No flatpaks.txt in your backup directory! Did you specify the right directory? Please check for "
+              "correct order of arguments: first -d/--backup-dir then -r/--restore!")
+        exit(2)
+    else:
+        try:
+            f = open(".backupdone", "r")
+            date = f.read(10)
+            f.close()
+        except FileNotFoundError:
+            date = "Unknown"
+        print("Restoring flatpaks and from ", date, "...")
+        app = f.readline()
+        while app:
+            app = f.readline()
+            subprocess.run(args=["flatpak", "install", "--user", "--assumeyes", "app"])
+        print("Done!")
 
 
 def restore_dconf_settings():
