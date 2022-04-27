@@ -63,7 +63,7 @@ def save_apt_packages():
 
 def save_flatpak_apps():
     f = open("flatpaks.txt", "w")
-    subprocess.run(args=["flatpak", "list", "--app", "--columns=origin,ref"], stdout=f)  # This will store a junk line
+    subprocess.run(args=["flatpak", "list", "--app", "--columns=ref"], stdout=f)
     f.close()
 
 
@@ -87,10 +87,11 @@ def restore_apt_packages():
 def restore_flatpak_apps():
     flatpaklist = open_backup_file("flatpaks.txt")
     announce_date("flatpak apps")
-    app = flatpaklist.readline()
-    while app:
+    while True:
         app = flatpaklist.readline()
-        subprocess.run(args=["flatpak", "install", "--user", "--assumeyes", "app"])
+        if app == "":
+            break
+        subprocess.run(args=["flatpak", "install", "--user", "--assumeyes", app[0:-1]])
     print("Done!")
 
 
