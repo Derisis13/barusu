@@ -55,13 +55,13 @@ def run_daily():
     f.close()
 
 
-def list_apt_packages():
+def save_apt_packages():
     f = open("packages.txt", "w")
     subprocess.run(args=["dpkg", "--get-selections"], stdout=f)
     f.close()
 
 
-def list_flatpak_apps():
+def save_flatpak_apps():
     f = open("flatpaks.txt", "w")
     subprocess.run(args=["flatpak", "list", "--app", "--columns=origin,ref"], stdout=f)  # This will store a junk line
     f.close()
@@ -113,6 +113,8 @@ def restore():
         restore_apt_packages()
     if actions.__contains__("dconf"):
         restore_dconf_settings()
+    if actions.__contains__("flatpak"):
+        restore_flatpak_apps()
     print("Exiting...")
     exit()
 
@@ -130,6 +132,7 @@ if __name__ == '__main__':
     backupdir = os.path.expanduser("~/.backup")
     package_manager = "apt-get"
     settings_editor = "dconf"
+    flatpak = "flatpak"
     restore_mode = False
     try:
         options, values = getopt.getopt(sys.argv[1:], "hd:ra:", ["help", "backup-dir=", "restore", "action="])
@@ -139,24 +142,27 @@ if __name__ == '__main__':
     else:
         for option, value in options:
             if option in ("-h", "--help"):
-                print("usage: barusu [opts]\n"
+                print("usage: " + sys.argv[0] + " [opts]\n"
                       "Options:\n"
                       "\t-h --help: show this\n"
                       "\t-d --backup-dir [directory]: set the directory for the backup/restoration "
                       "(default is ~/.backups)\n"
                       "\t-r --restore: run the restoration (from backupdir)\n"
                       "\t-a --action [a/d]: select actions to perform (default is all). Valid actions: "
-                      "a - back up apt packages, d - back up dconf settings")
+                      "a - back up apt packages, d - back up dconf settings, f - back up flatpak apps")
                 exit()
             elif option in ("-d", "--backup-dir"):
                 backupdir = os.path.expanduser(value)
             elif option in ("-a", "--action"):
                 package_manager = False
                 settings_editor = False
+                flatpak = False
                 if value.__contains__('a'):
                     package_manager = "apt-get"
                 if value.__contains__('d'):
                     settings_editor = "dconf"
+                if value.__contains__('f'):
+                    flatpak = "flatpak"
             elif option in ("-r", "--restore"):
                 restore_mode = True
 
@@ -175,6 +181,8 @@ if __name__ == '__main__':
         exit(0)
     run_daily()
     if actions.__contains__("apt-get"):
-        list_apt_packages()
+        save_apt_packages()
     if actions.__contains__("dconf"):
         save_dconf_settings()
+    if actions.__contains__("flatpak"):
+        save_flatpak_apps()
