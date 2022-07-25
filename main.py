@@ -20,16 +20,6 @@ import subprocess
 import sys
 
 
-def announce_date(type):
-    try:
-        f = open(".backupdone", "r")
-        date = f.read(10)
-        f.close()
-    except FileNotFoundError:
-        date = "Unknown"
-    print("Restoring " + type + " from " + date)
-
-
 def open_backup_file(filename):
     global backupfile
     try:
@@ -63,7 +53,7 @@ def save_dconf_settings():
 def restore_apt_packages():
     if os.getuid() == 0:
         packagelist = open_backup_file("packages.txt")
-        announce_date("apt packages")
+        print("Restoring apt packages...")
         subprocess.run(["dpkg", "--set-selections"], stdin=packagelist)
         subprocess.run(["apt-get", "dselect-upgrade"])
         print("Done!")
@@ -73,7 +63,7 @@ def restore_apt_packages():
 
 def restore_flatpak_apps():
     flatpaklist = open_backup_file("flatpaks.txt")
-    announce_date("flatpak apps")
+    print("Restoring flatpak applications...")
     while True:
         app = flatpaklist.readline()
         if app == "":
@@ -84,7 +74,7 @@ def restore_flatpak_apps():
 
 def restore_dconf_settings():
     config = open_backup_file("dconf_out.txt")
-    announce_date("dconf settings")
+    print("Restoring dconf settings...")
     subprocess.run(['dconf', 'load', '/'], stdin=config)
     config.close()
     print("Done!")
