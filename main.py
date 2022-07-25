@@ -42,19 +42,6 @@ def open_backup_file(filename):
     return backupfile
 
 
-def run_daily():
-    try:
-        f = open('.backupdone', "r+")
-    except FileNotFoundError:
-        f = open('.backupdone', "w+")
-    old_date = f.read(10)
-    if (old_date == str(datetime.datetime.now().date())) and (len(old_date) > 0):
-        exit()
-    f.seek(0, 0)
-    f.write(str(datetime.datetime.now().date()))
-    f.close()
-
-
 def save_apt_packages():
     f = open("packages.txt", "w")
     subprocess.run(args=["dpkg", "--get-selections"], stdout=f)
@@ -180,7 +167,6 @@ if __name__ == '__main__':
     if restore_mode:
         restore()
         exit(0)
-    run_daily()
     if actions.__contains__("apt-get"):
         save_apt_packages()
     if actions.__contains__("dconf"):
