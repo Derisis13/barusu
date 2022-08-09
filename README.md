@@ -12,12 +12,16 @@ Options:
 
 After downloading run in the directory you downloaded barusu to: `python3 setup.py install`
 
-## Using with cron
+## Using with cron/anacron
 
-In a terminal run: `crontab` (you might need to choose an editor to continue)
+In a terminal run: `crontab -e` (you might need to choose an editor to continue)
 Once you see your crontab in your editor paste the following line at the end:
-`0 * * * * barusu`
-This will attempt to run barusu hourly, however it'll only fully run once daily and exit every other time to save system resources.
+```
+0 3 * * * barusu
+```
+This will run barusu every 3:00, but if the computer is off, your daily backup is missed.
+
+Alternatively you can set up anacron (usually not installed by default)
 
 ## How it works:
 
