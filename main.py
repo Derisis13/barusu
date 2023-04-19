@@ -106,7 +106,11 @@ def check_progs(prog):
 
 
 if __name__ == '__main__':
-    backupdir = os.path.expanduser("~/.backup")
+    try:
+        data_dir = os.environ["XDG_DATA_HOME"]
+    except KeyError as e:
+        data_dir = os.path.expanduser("~/.local/share")
+    backupdir = os.path.join(data_dir, "barusu/")
     package_manager = "apt-get"
     settings_editor = "dconf"
     flatpak = "flatpak"
@@ -123,7 +127,7 @@ if __name__ == '__main__':
                       "Options:\n"
                       "\t-h --help: show this\n"
                       "\t-d --backup-dir [directory]: set the directory for the backup/restoration "
-                      "(default is ~/.backups)\n"
+                      "(default is $XDG_DATA_HOME/barusu if $XDG_DATA_HOME is defined, else ~/.local/share/barusu)\n"
                       "\t-r --restore: run the restoration (from backupdir)\n"
                       "\t-a --action [a/d]: select actions to perform (default is all). Valid actions: "
                       "a - back up apt packages, d - back up dconf settings, f - back up flatpak apps")
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     try:
         os.chdir(backupdir)
     except FileNotFoundError:
-        subprocess.call(["mkdir", backupdir])
+        os.mkdirs(backupdir, mode=0o774)
         os.chdir(backupdir)
     if restore_mode:
         restore()
