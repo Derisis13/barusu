@@ -129,7 +129,7 @@ if __name__ == '__main__':
                       "\t-d --backup-dir [directory]: set the directory for the backup/restoration "
                       "(default is $XDG_DATA_HOME/barusu if $XDG_DATA_HOME is defined, else ~/.local/share/barusu)\n"
                       "\t-r --restore: run the restoration (from backupdir)\n"
-                      "\t-a --action [a/d]: select actions to perform (default is all). Valid actions: "
+                      "\t-a --action [afd]: select actions to perform (default is all). Valid actions: "
                       "a - back up apt packages, d - back up dconf settings, f - back up flatpak apps")
                 exit()
             elif option in ("-d", "--backup-dir"):
