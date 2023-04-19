@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import distutils.spawn
+import shutil
 import getopt
 import os
 import subprocess
@@ -99,7 +99,7 @@ def restore():
 def check_progs(prog):
     if prog is False:
         return False
-    if distutils.spawn.find_executable(prog) is False:
+    if shutil.which(prog) is False:
         print("Missing program:" + prog + "! It is removed from the list of actions to perform...")
         return False
     return True
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     try:
         os.chdir(backupdir)
     except FileNotFoundError:
-        os.mkdirs(backupdir, mode=0o774)
+        os.makedirs(backupdir, mode=0o774)
         os.chdir(backupdir)
     if restore_mode:
         restore()
