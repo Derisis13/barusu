@@ -28,7 +28,7 @@ Alternatively you can set up anacron (usually not installed by default)
 backup:
 1. It uses `dpkg` to get a list of all installed packages.
 2. It dumps all settings using `dconf`
-3. The result is three files in `$XDG_DATA_HOME/barusu` (unless specified otherwise): `packages.txt`, `flatpaks.txt` and `dconf_out.txt` (and a hidden `.backupdone` file for internal usage of the program)
+3. The result is three files in `$XDG_DATA_HOME/barusu` (unless specified otherwise): `packages.txt`, `flatpaks.txt` and `dconf_out.txt`
 
 restore:
 (you must call the script as root when restoring!)
